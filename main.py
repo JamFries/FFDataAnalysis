@@ -9,13 +9,34 @@ ff_data = d.DataAnalyzer('2019-2.csv') #Creates an object that analyzes the give
 ######################################################################################################
 
 # How did Targets + Rushing TDs correlate to fantasy points per game for Running Backs in 2019?
-ff_data.plotUsagePerGame('RB')
-ff_data.plotUsagePerGame('WR')
+#ff_data.plotUsagePerGame('RB')
+#ff_data.plotUsagePerGame('WR')
 
 
 # How does efficiency correlate to fantasy football performance?
-ff_data.plotEfficiency('RB')
-ff_data.plotEfficiency('WR')
+#ff_data.plotEfficiency('RB')
+#ff_data.plotEfficiency('WR')
 
 # How does rushing yards per attempt correlate with fantasy football points?
+#ff_data.plotRushYardsPerAttempt('RB', 20) #at least 20 rushes in the season
+######################################################################################################
+ff_data.plotUsagePerGame('WR')
+# The plot shows that WR's with 8+ targets per game average 12+ ff points per game
+# Print a list of all WRs that averaged 8+ targets per game
+bestTargets = ff_data.data_wr[ff_data.data_wr['Usage/GM'] > 8]
+print('_______________________________________________________________')
+print(bestTargets)
 
+print('_______________________________________________________________')
+# Determine the highest targeted receiver's catch rates
+bestCatchRate = bestTargets[bestTargets['CatchRate'] > 0.75] #WR catches 75% of his targets
+print(bestCatchRate)
+#From this we can see that the only receiver to get 8+ targets a game and has a catch rate >75% is Michael Thomas
+
+
+print('_______________________________________________________________')
+ff_data.plotRushAttemptsPerGame()
+#The plots shows that RB's with 15+ rushes per game average 13+ ff points per game
+# Print a list of all RBs that averaged 15+ rushes per game
+bestRushAtt = ff_data.data_rb[ff_data.data_rb['RushAttempts/GM'] > 15] #get list of RBs who had >15 rushes per game
+print(bestRushAtt)

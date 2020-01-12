@@ -44,12 +44,14 @@ class DataAnalyzer:
         self.initializeColumns(self.data_qb)
         self.initializeColumns(self.data_wr)
         self.initializeColumns(self.data_te)
+        self.data_wr['CatchRate'] = self.data_wr['Rec'] / self.data_wr['Tgt']
 
     #Method that adds extra columns to its dataset that can be used for later calculations
     def initializeColumns(self, positionDataset):
         #fantasy points per game (an average)
         positionDataset['FantasyPoints/GM'] = positionDataset['FantasyPoints'] / positionDataset['G']
         positionDataset['FantasyPoints/GM'] = positionDataset['FantasyPoints/GM'].apply(lambda x: round(x, 2))
+
 
 
 
@@ -68,8 +70,8 @@ class DataAnalyzer:
         elif position == 'QB':
             pass
         elif position == 'WR':
-            # Create new column for usage per game. Usage is define as # of targets + carries
-            self.data_wr['Usage/GM'] = (self.data_wr['RushingAtt'] + self.data_wr['Tgt']) / self.data_wr['G']
+            # Create new column for usage per game. Usage is define as # of targets
+            self.data_wr['Usage/GM'] = (self.data_wr['Tgt']) / self.data_wr['G']
             # round each row value to two decimal places
             self.data_wr['Usage/GM'] = self.data_wr['Usage/GM'].apply(lambda x: round(x, 2))
 
@@ -86,7 +88,6 @@ class DataAnalyzer:
         else:
             print('Incorrect position entered')
             return #because we dont want to plot an empty graph
-
         sns.set_style('whitegrid')
         fig, ax = plt.subplots()
         fig.set_size_inches(15, 10)
@@ -113,14 +114,50 @@ class DataAnalyzer:
         elif position == 'TE':
             self.data_te['TD/Usage'] = (self.data_te['RushingTD'] + self.data_te['ReceivingTD']) / (
                         self.data_te['RushingAtt'] + self.data_te['Tgt'])
-            sampleSize = self.data_te[
-                self.data_te['Tgt'] > cutoff]  # adjust the size of the data based on the user's input
+            sampleSize = self.data_te[self.data_te['Tgt'] > cutoff]  # adjust the size of the data based on the user's input
 
             x = sampleSize['TD/Usage']
             y = sampleSize['FantasyPoints/GM']
         else:
             print('Incorrect position entered')
             return
+        sns.set_style('whitegrid')
+        fig, ax = plt.subplots()
+        fig.set_size_inches(15, 10)
+        plot = sns.regplot(x, y, scatter=True)
+        plt.show()
+
+    # method that plots Y/A by fantasy football points per game. defaults to runningback if position parameter is not filled
+    def plotRushYardsPerAttempt(self, position='RB', minAttempts=5):
+        x, y = (0, 0)
+        if position == 'RB':
+            sampleSize = self.data_rb[self.data_rb['RushingAtt'] > minAttempts] #narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
+            x = sampleSize['Y/A']
+            y = sampleSize['FantasyPoints/GM']
+        elif position == 'QB':
+            pass
+        elif position == 'WR':
+            sampleSize = self.data_wr[self.data_wr['RushingAtt'] > minAttempts]  # narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
+            x = sampleSize['Y/A']
+            y = sampleSize['FantasyPoints/GM']
+        elif position == 'TE':
+            sampleSize = self.data_te[self.data_te['RushingAtt'] > minAttempts]  # narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
+            x = sampleSize['Y/A']
+            y = sampleSize['FantasyPoints/GM']
+        else:
+            print("Incorrect position entered")
+            return
+        sns.set_style('whitegrid')
+        fig, ax = plt.subplots()
+        fig.set_size_inches(15, 10)
+        plot = sns.regplot(x, y, scatter=True)
+        plt.show()
+
+    # method that plots rushes per game by fantasy football points
+    def plotRushAttemptsPerGame(self, position='RB'):
+        self.data_rb['RushAttempts/GM'] = self.data_rb['RushingAtt'] / self.data_rb['G']
+        x = self.data_rb['RushAttempts/GM']
+        y = self.data_rb['FantasyPoints/GM']
 
         sns.set_style('whitegrid')
         fig, ax = plt.subplots()
@@ -128,3 +165,6 @@ class DataAnalyzer:
         plot = sns.regplot(x, y, scatter=True)
         plt.show()
 
+    # generalized plotting method
+    def plot(self, position, statOne, statTwo):
+        pass
