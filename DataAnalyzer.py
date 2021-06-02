@@ -44,7 +44,12 @@ class DataAnalyzer:
         self.initializeColumns(self.data_qb)
         self.initializeColumns(self.data_wr)
         self.initializeColumns(self.data_te)
+
+        # Add a catchrate column to positions of players that can catch balls
         self.data_wr['CatchRate'] = self.data_wr['Rec'] / self.data_wr['Tgt']
+        self.data_te['CatchRate'] = self.data_te['Rec'] / self.data_te['Tgt']
+        self.data_rb['CatchRate'] = self.data_rb['Rec'] / self.data_rb['Tgt']
+
 
     #Method that adds extra columns to its dataset that can be used for later calculations
     def initializeColumns(self, positionDataset):
@@ -70,7 +75,7 @@ class DataAnalyzer:
         elif position == 'QB':
             pass
         elif position == 'WR':
-            # Create new column for usage per game. Usage is define as # of targets
+            # Create new column for usage per game. Usage is defined as the # of targets
             self.data_wr['Usage/GM'] = (self.data_wr['Tgt']) / self.data_wr['G']
             # round each row value to two decimal places
             self.data_wr['Usage/GM'] = self.data_wr['Usage/GM'].apply(lambda x: round(x, 2))
@@ -78,8 +83,8 @@ class DataAnalyzer:
             x = self.data_wr['Usage/GM']
             y = self.data_wr['FantasyPoints/GM']
         elif position == 'TE':
-            # Create new column for usage per game. Usage is define as # of targets + carries
-            self.data_te['Usage/GM'] = (self.data_te['RushingAtt'] + self.data_te['Tgt']) / self.data_te['G']
+            # Create new column for usage per game. Usage is define as # of targets
+            self.data_te['Usage/GM'] = (self.data_te['Tgt']) / self.data_te['G']
             # round each row value to two decimal places
             self.data_te['Usage/GM'] = self.data_te['Usage/GM'].apply(lambda x: round(x, 2))
 
