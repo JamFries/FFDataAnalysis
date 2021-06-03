@@ -4,6 +4,8 @@ import dash_html_components as html
 import pandas as pd
 from dash.dependencies import Input, Output
 
+import dash_table
+
 import pandas
 import plotly.express as px
 
@@ -61,6 +63,7 @@ def cleanDataset(csvFile):
     return retVal
 
 df_2019 = cleanDataset("FF_data_2019.csv")
+# df_2020 = cleanDataset("FF_data_2020.csv")
 
 
 app = dash.Dash()
@@ -71,7 +74,9 @@ app.layout = html.Div([
 ])
 
 index_page = layouts.index_page()
+table_page = layouts.dataTable_page(df_2019)
 test_page = layouts.test()
+
 ff_2019 = layouts.ff_data()
 ff_2020 = layouts.ff_data()
 
@@ -88,13 +93,47 @@ def display_page(pathname):
         return ff_2020
     elif (pathname == '/test'):
         return test_page
+    elif (pathname == '/table'):
+        return table_page
     else:
         return index_page
 
-# Connect the plotly graph with the dash components
+@app.callback(
+    Output(component_id='table-container', component_property='children'),
+    [Input(component_id='dropdown', component_property='value')]
+)
+def display_table(dropdown_value):
+    if dropdown_value is None:
+        return generate_table(df_2019)
 
+    dff_2019 = df_2019[df_2019.Player.str.contains('|'.join(dropdown_value))]
+    return generate_table(dff_2019)
 
+def generate_table(dataframe):
+    return dash_table.DataTable(
+        id='table',
+        columns=[{"name": i, "id": i} for i in dataframe.columns],
+        data=dataframe.to_dict('records'),
 
+        filter_action='native',
+        sort_action='native',
+
+        style_cell=dict(textAlign='left'),
+        style_header=dict(backgroundColor='paleturquoise'),
+        style_data=dict(backgroundColor='lavender')
+    )
+
+# Function that writes a table in html given a pandas dataframe
+# def generate_table(dataframe, max_rows=10):
+#     return html.Table(
+#         # Header
+#         [html.Tr([html.Th(col) for col in dataframe.columns])] +
+#
+#         # Body
+#         [html.Tr([
+#             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+#         ]) for i in range(min(len(dataframe), max_rows))]
+#     )
 
 
 if __name__ == '__main__':
