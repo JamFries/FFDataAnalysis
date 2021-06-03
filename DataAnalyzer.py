@@ -28,6 +28,8 @@ class DataAnalyzer:
             'Att.1': 'RushingAtt'
         }, axis=1, inplace=True)
 
+
+
         # separate dataframes based off position
         self.data_rb = self.data[self.data['FantPos'] == 'RB']
         self.data_qb = self.data[self.data['FantPos'] == 'QB']
@@ -50,126 +52,131 @@ class DataAnalyzer:
         self.data_te['CatchRate'] = self.data_te['Rec'] / self.data_te['Tgt']
         self.data_rb['CatchRate'] = self.data_rb['Rec'] / self.data_rb['Tgt']
 
-
-    #Method that adds extra columns to its dataset that can be used for later calculations
+    # Method that adds extra columns to its dataset that can be used for later calculations
     def initializeColumns(self, positionDataset):
-        #fantasy points per game (an average)
+        # Columns to add across all positions
+        #
+        # Fantasy Points per Game (an average)
         positionDataset['FantasyPoints/GM'] = positionDataset['FantasyPoints'] / positionDataset['G']
         positionDataset['FantasyPoints/GM'] = positionDataset['FantasyPoints/GM'].apply(lambda x: round(x, 2))
 
 
 
+    # Returns the dataset stored in the DataAnalyzer object
+    def getData(self):
+        return self.data
 
-    #Method that plots the usage per game by the fantasy points per game of the given position
-    def plotUsagePerGame(self, position):
-        x, y = (0, 0) #initalize x and y variables for plotting
-        if position == 'RB':
-            # Create new column for usage per game. Usage is define as # of targets + carries
-            self.data_rb['Usage/GM'] = (self.data_rb['RushingAtt'] + self.data_rb['Tgt']) / self.data_rb['G']
-            # round each row value to two decimal places
-            self.data_rb['Usage/GM'] = self.data_rb['Usage/GM'].apply(lambda x: round(x, 2))
 
-            x = self.data_rb['Usage/GM']
-            y = self.data_rb['FantasyPoints/GM']
-
-        elif position == 'QB':
-            pass
-        elif position == 'WR':
-            # Create new column for usage per game. Usage is defined as the # of targets
-            self.data_wr['Usage/GM'] = (self.data_wr['Tgt']) / self.data_wr['G']
-            # round each row value to two decimal places
-            self.data_wr['Usage/GM'] = self.data_wr['Usage/GM'].apply(lambda x: round(x, 2))
-
-            x = self.data_wr['Usage/GM']
-            y = self.data_wr['FantasyPoints/GM']
-        elif position == 'TE':
-            # Create new column for usage per game. Usage is define as # of targets
-            self.data_te['Usage/GM'] = (self.data_te['Tgt']) / self.data_te['G']
-            # round each row value to two decimal places
-            self.data_te['Usage/GM'] = self.data_te['Usage/GM'].apply(lambda x: round(x, 2))
-
-            x = self.data_te['Usage/GM']
-            y = self.data_te['FantasyPoints/GM']
-        else:
-            print('Incorrect position entered')
-            return #because we dont want to plot an empty graph
-        sns.set_style('whitegrid')
-        fig, ax = plt.subplots()
-        fig.set_size_inches(15, 10)
-        plot = sns.regplot(x, y, scatter=True)
-        plt.show()
-
-    #method that plots the efficiency (TD/Usage) by Fantasy Points per game
-    def plotEfficiency(self, position, cutoff=20):
-        x, y = (0, 0)
-        if position == 'RB':
-            self.data_rb['TD/Usage'] = (self.data_rb['RushingTD'] + self.data_rb['ReceivingTD']) / (self.data_rb['RushingAtt'] + self.data_rb['Tgt'])
-            sampleSize = self.data_rb[self.data_rb['RushingAtt'] > cutoff] #adjust the size of the data based on the user's input
-
-            x = sampleSize['TD/Usage']
-            y = sampleSize['FantasyPoints/GM']
-        elif position == 'QB':
-            pass
-        elif position == 'WR':
-            self.data_wr['TD/Usage'] = (self.data_wr['RushingTD'] + self.data_wr['ReceivingTD']) / (self.data_wr['RushingAtt'] + self.data_wr['Tgt'])
-            sampleSize = self.data_wr[self.data_wr['Tgt'] > cutoff]  # adjust the size of the data based on the user's input
-
-            x = sampleSize['TD/Usage']
-            y = sampleSize['FantasyPoints/GM']
-        elif position == 'TE':
-            self.data_te['TD/Usage'] = (self.data_te['RushingTD'] + self.data_te['ReceivingTD']) / (
-                        self.data_te['RushingAtt'] + self.data_te['Tgt'])
-            sampleSize = self.data_te[self.data_te['Tgt'] > cutoff]  # adjust the size of the data based on the user's input
-
-            x = sampleSize['TD/Usage']
-            y = sampleSize['FantasyPoints/GM']
-        else:
-            print('Incorrect position entered')
-            return
-        sns.set_style('whitegrid')
-        fig, ax = plt.subplots()
-        fig.set_size_inches(15, 10)
-        plot = sns.regplot(x, y, scatter=True)
-        plt.show()
-
-    # method that plots Y/A by fantasy football points per game. defaults to runningback if position parameter is not filled
-    def plotRushYardsPerAttempt(self, position='RB', minAttempts=5):
-        x, y = (0, 0)
-        if position == 'RB':
-            sampleSize = self.data_rb[self.data_rb['RushingAtt'] > minAttempts] #narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
-            x = sampleSize['Y/A']
-            y = sampleSize['FantasyPoints/GM']
-        elif position == 'QB':
-            pass
-        elif position == 'WR':
-            sampleSize = self.data_wr[self.data_wr['RushingAtt'] > minAttempts]  # narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
-            x = sampleSize['Y/A']
-            y = sampleSize['FantasyPoints/GM']
-        elif position == 'TE':
-            sampleSize = self.data_te[self.data_te['RushingAtt'] > minAttempts]  # narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
-            x = sampleSize['Y/A']
-            y = sampleSize['FantasyPoints/GM']
-        else:
-            print("Incorrect position entered")
-            return
-        sns.set_style('whitegrid')
-        fig, ax = plt.subplots()
-        fig.set_size_inches(15, 10)
-        plot = sns.regplot(x, y, scatter=True)
-        plt.show()
-
-    # method that plots rushes per game by fantasy football points
-    def plotRushAttemptsPerGame(self, position='RB'):
-        self.data_rb['RushAttempts/GM'] = self.data_rb['RushingAtt'] / self.data_rb['G']
-        x = self.data_rb['RushAttempts/GM']
-        y = self.data_rb['FantasyPoints/GM']
-
-        sns.set_style('whitegrid')
-        fig, ax = plt.subplots()
-        fig.set_size_inches(15, 10)
-        plot = sns.regplot(x, y, scatter=True)
-        plt.show()
-
-    # generalized plotting method
-    def plot(self, position, statOne, statTwo):
-        pass
+    # #Method that plots the usage per game by the fantasy points per game of the given position
+    # def plotUsagePerGame(self, position):
+    #     x, y = (0, 0) #initalize x and y variables for plotting
+    #     if position == 'RB':
+    #         # Create new column for usage per game. Usage is define as # of targets + carries
+    #         self.data_rb['Usage/GM'] = (self.data_rb['RushingAtt'] + self.data_rb['Tgt']) / self.data_rb['G']
+    #         # round each row value to two decimal places
+    #         self.data_rb['Usage/GM'] = self.data_rb['Usage/GM'].apply(lambda x: round(x, 2))
+    #
+    #         x = self.data_rb['Usage/GM']
+    #         y = self.data_rb['FantasyPoints/GM']
+    #
+    #     elif position == 'QB':
+    #         pass
+    #     elif position == 'WR':
+    #         # Create new column for usage per game. Usage is defined as the # of targets
+    #         self.data_wr['Usage/GM'] = (self.data_wr['Tgt']) / self.data_wr['G']
+    #         # round each row value to two decimal places
+    #         self.data_wr['Usage/GM'] = self.data_wr['Usage/GM'].apply(lambda x: round(x, 2))
+    #
+    #         x = self.data_wr['Usage/GM']
+    #         y = self.data_wr['FantasyPoints/GM']
+    #     elif position == 'TE':
+    #         # Create new column for usage per game. Usage is define as # of targets
+    #         self.data_te['Usage/GM'] = (self.data_te['Tgt']) / self.data_te['G']
+    #         # round each row value to two decimal places
+    #         self.data_te['Usage/GM'] = self.data_te['Usage/GM'].apply(lambda x: round(x, 2))
+    #
+    #         x = self.data_te['Usage/GM']
+    #         y = self.data_te['FantasyPoints/GM']
+    #     else:
+    #         print('Incorrect position entered')
+    #         return #because we dont want to plot an empty graph
+    #     sns.set_style('whitegrid')
+    #     fig, ax = plt.subplots()
+    #     fig.set_size_inches(15, 10)
+    #     plot = sns.regplot(x, y, scatter=True)
+    #     plt.show()
+    #
+    # #method that plots the efficiency (TD/Usage) by Fantasy Points per game
+    # def plotEfficiency(self, position, cutoff=20):
+    #     x, y = (0, 0)
+    #     if position == 'RB':
+    #         self.data_rb['TD/Usage'] = (self.data_rb['RushingTD'] + self.data_rb['ReceivingTD']) / (self.data_rb['RushingAtt'] + self.data_rb['Tgt'])
+    #         sampleSize = self.data_rb[self.data_rb['RushingAtt'] > cutoff] #adjust the size of the data based on the user's input
+    #
+    #         x = sampleSize['TD/Usage']
+    #         y = sampleSize['FantasyPoints/GM']
+    #     elif position == 'QB':
+    #         pass
+    #     elif position == 'WR':
+    #         self.data_wr['TD/Usage'] = (self.data_wr['RushingTD'] + self.data_wr['ReceivingTD']) / (self.data_wr['RushingAtt'] + self.data_wr['Tgt'])
+    #         sampleSize = self.data_wr[self.data_wr['Tgt'] > cutoff]  # adjust the size of the data based on the user's input
+    #
+    #         x = sampleSize['TD/Usage']
+    #         y = sampleSize['FantasyPoints/GM']
+    #     elif position == 'TE':
+    #         self.data_te['TD/Usage'] = (self.data_te['RushingTD'] + self.data_te['ReceivingTD']) / (
+    #                     self.data_te['RushingAtt'] + self.data_te['Tgt'])
+    #         sampleSize = self.data_te[self.data_te['Tgt'] > cutoff]  # adjust the size of the data based on the user's input
+    #
+    #         x = sampleSize['TD/Usage']
+    #         y = sampleSize['FantasyPoints/GM']
+    #     else:
+    #         print('Incorrect position entered')
+    #         return
+    #     sns.set_style('whitegrid')
+    #     fig, ax = plt.subplots()
+    #     fig.set_size_inches(15, 10)
+    #     plot = sns.regplot(x, y, scatter=True)
+    #     plt.show()
+    #
+    # # method that plots Y/A by fantasy football points per game. defaults to runningback if position parameter is not filled
+    # def plotRushYardsPerAttempt(self, position='RB', minAttempts=5):
+    #     x, y = (0, 0)
+    #     if position == 'RB':
+    #         sampleSize = self.data_rb[self.data_rb['RushingAtt'] > minAttempts] #narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
+    #         x = sampleSize['Y/A']
+    #         y = sampleSize['FantasyPoints/GM']
+    #     elif position == 'QB':
+    #         pass
+    #     elif position == 'WR':
+    #         sampleSize = self.data_wr[self.data_wr['RushingAtt'] > minAttempts]  # narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
+    #         x = sampleSize['Y/A']
+    #         y = sampleSize['FantasyPoints/GM']
+    #     elif position == 'TE':
+    #         sampleSize = self.data_te[self.data_te['RushingAtt'] > minAttempts]  # narrows the size by cutting those who ran the ball less than 'minAttempts' times throughout the season
+    #         x = sampleSize['Y/A']
+    #         y = sampleSize['FantasyPoints/GM']
+    #     else:
+    #         print("Incorrect position entered")
+    #         return
+    #     sns.set_style('whitegrid')
+    #     fig, ax = plt.subplots()
+    #     fig.set_size_inches(15, 10)
+    #     plot = sns.regplot(x, y, scatter=True)
+    #     plt.show()
+    #
+    # # method that plots rushes per game by fantasy football points
+    # def plotRushAttemptsPerGame(self, position='RB'):
+    #     self.data_rb['RushAttempts/GM'] = self.data_rb['RushingAtt'] / self.data_rb['G']
+    #     x = self.data_rb['RushAttempts/GM']
+    #     y = self.data_rb['FantasyPoints/GM']
+    #
+    #     sns.set_style('whitegrid')
+    #     fig, ax = plt.subplots()
+    #     fig.set_size_inches(15, 10)
+    #     plot = sns.regplot(x, y, scatter=True)
+    #     plt.show()
+    #
+    # # generalized plotting method
+    # def plot(self, position, statOne, statTwo):
+    #     pass
